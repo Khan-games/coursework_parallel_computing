@@ -15,7 +15,7 @@ std::thread t;
 
 // network vars
 io_service service; // main obj for boost::asio
-ip::tcp::endpoint ep(ip::address::from_string("127.0.0.1"), 10105); // localhost 
+ip::tcp::endpoint ep(ip::address::from_string("127.0.0.1"), 10105); // localhost, port 10105
 
 std::string thread_id_to_str() { // convert current thread's id to string
 	std::stringstream ss;
@@ -25,18 +25,43 @@ std::string thread_id_to_str() { // convert current thread's id to string
 	return s;
 }
 
-void send_msg(std::string msg) {
+bool read_complete(char* buff, const boost::system::error_code & err,
+	size_t bytes) {	// check if reading is done (return 0 if done)
+	if (err) return 0;
+	bool found = std::find(buff, buff + bytes, '\n') < (buff + bytes);
+	return !found;
+}
+
+void send_msg(std::string msg) { // send msg to server
 	cons::print("Trying to send msg \"" + msg +"\"");
 	
-	boost::system::error_code ec;
-	ip::tcp::socket sock(service);
-	sock.connect(ep, ec);
+	msg += '\n'; // add indicator of msg end
 
-	// check error
+	boost::system::error_code ec;
+	ip::tcp::socket sock(service); // main socket for thread
+	sock.connect(ep, ec);
+	// check connection error
 	if (ec) {
 		cons::print( "[ERROR] Failed to connect to server!\tthread_id = " + thread_id_to_str(), RED);
+		return;
 	}
 
+	sock.write_some(buffer(msg));
+
+	char buff[1024];
+	int bytes = read(sock, buffer(buff), std::bind(read_complete, buff, std::placeholders::_1, 
+		std::placeholders::_2));
+
+	// check response
+	std::string response(buff, bytes);
+	if (msg == response) { // OK
+		cons::print("[RESP] Send msg \"" + msg + "\", received msg \"" + response +"\"\tthread_id = " 
+			+ thread_id_to_str(), GREEN);
+	}
+	else { // FAIL
+		cons::print("[RESP] Send msg \"" + msg + "\", received msg \"" + response + "\"\tthread_id = " 
+			+ thread_id_to_str(), RED);
+	}
 
 }
 

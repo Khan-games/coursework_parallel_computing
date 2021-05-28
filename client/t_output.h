@@ -3,6 +3,12 @@
 #include <iostream>
 #include <mutex>
 #include <string>
+#include <windows.h>
+
+// for color enabling
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
 
 // colors
 #define RED     "\033[31m"      /* Red */
@@ -15,6 +21,7 @@
 namespace cons {
 	extern std::mutex output_m;
 	void print(std::string str, std::string color = RESET);
+	void enable_console_colors();
 }
 
 

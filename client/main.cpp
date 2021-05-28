@@ -7,6 +7,13 @@
 
 #include "t_output.h"
 
+// network
+#define EP_PORT 10105
+#define EP_IP "127.0.0.1"
+
+// constants
+#define BUFF_SIZE 1024
+
 using namespace boost::asio;
 
 
@@ -15,7 +22,7 @@ std::thread t;
 
 // network vars
 io_service service; // main obj for boost::asio
-ip::tcp::endpoint ep(ip::address::from_string("127.0.0.1"), 10105); // localhost, port 10105
+ip::tcp::endpoint ep(ip::address::from_string(EP_IP), EP_PORT); // connecting to localhost, port 10105
 
 std::string thread_id_to_str() { // convert current thread's id to string
 	std::stringstream ss;
@@ -48,7 +55,7 @@ void send_msg(std::string msg) { // send msg to server
 
 	sock.write_some(buffer(msg));
 
-	char buff[1024];
+	char buff[BUFF_SIZE];
 	int bytes = read(sock, buffer(buff), std::bind(read_complete, buff, std::placeholders::_1, 
 		std::placeholders::_2));
 
@@ -66,6 +73,9 @@ void send_msg(std::string msg) { // send msg to server
 }
 
 int main() {
+	cons::enable_console_colors();
+	cons::print("\t--- CLIENT STARTED ---", GREEN);
+
 	boost::thread_group tg; // thread pool
 	std::vector<std::string> messages {"first message", "second message", "third message"}; // messages to send
 
@@ -74,4 +84,7 @@ int main() {
 	}
 	
 	tg.join_all();
+
+	cons::print("\t--- CLIENT STOPPED ---", RED);
+	std::getchar(); // pause console
 }

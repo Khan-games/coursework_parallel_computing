@@ -4,7 +4,7 @@ Client::Client(boost::asio::ip::tcp::socket* sock, unsigned id) :
 	sock(sock),
 	id(id)
 {
-	th_task = std::thread(&Client::make_task, this);
+	th_task = std::thread(&Client::make_task, this); // create separate thread to perform the task
 }
 
 Client::~Client() {

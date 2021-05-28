@@ -24,8 +24,9 @@ void Server::listen() {
 		// create new client
 		std::unique_lock<std::mutex> ul(clients_m);
 		clients.push_back(new Client(sock, next_client_id++));
-		Client* temp_client = clients.back();
+		Client* temp_client = clients.back(); // temp client to create log
 		ul.unlock();
+
 		// log
 		cons::print("[NEW CONN] Connection established with IP "
 			+ temp_client->get_ip() + ", client id = " 

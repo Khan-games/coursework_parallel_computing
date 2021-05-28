@@ -51,10 +51,6 @@ void handle_connections() {
 
 }
 
-void connection_handler() {
-	
-}
-
 int main() {
 	cons::enable_console_colors();
 	cons::print("\t--- SERVER STARTED ---", GREEN);

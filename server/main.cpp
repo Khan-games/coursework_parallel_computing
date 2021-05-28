@@ -2,6 +2,7 @@
 #include <string>
 #include <boost/asio.hpp>
 
+#include "Server.h"
 #include "t_output.h"
 #include "Constants.h"
 
@@ -57,7 +58,10 @@ void connection_handler() {
 int main() {
 	cons::enable_console_colors();
 	cons::print("\t--- SERVER STARTED ---", GREEN);
-	handle_connections();
+	
+	Server server;
+	server.listen();
+	
 	cons::print("\t--- SERVER STOPPED ---", RED);
 	std::getchar(); // pause console
 }

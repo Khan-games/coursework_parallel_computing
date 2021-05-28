@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/asio.hpp>
+#include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 
 #include "t_output.h"
@@ -30,13 +31,19 @@ private:
 	// message handling 
 	std::vector<std::string> v_msg;
 
-	// work methods
+	// main methods
 	void connect(); // connecting to server
 	void run();	// run client in separate  thread
 
 	// transfer data
 	template <typename T>
 	void archive_and_send(T& data);
+	template<typename T>
+	void read_data_once(T& data, size_t size); // get data block from client
+	template<typename T>
+	void read_client_data(T& data); // get serialized data from client
 
+	// other methods
+	void test_echo_run(std::string msg);
 };
 

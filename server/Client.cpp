@@ -34,11 +34,9 @@ void Client::read_client_data(T& data) {
 
 void Client::make_task() { // parallel method that recieves and make task from socket
 	while (true) {
-		int bytes;
-		std::string msg;
+		std::string msg; // message to receive
 		try {
 			read_client_data(msg);
-			cons::print(msg, CYAN);
 		}
 		catch (boost::system::system_error& err) { // error handling (lead to disconnect)
 			disconnected = true; // disconnect client
@@ -49,16 +47,12 @@ void Client::make_task() { // parallel method that recieves and make task from s
 			return;
 		}
 
-		//// echo msg
-		//std::string msg(buff, bytes);
-		//if (msg.length() > 1) {
-		//	cons::print("[MSG] Received msg \"" + msg.substr(0, msg.length() - 1) + "\";  Client id = " 
-		//		+ std::to_string(get_id()), YELLOW);
-		//}
-		//else {
-		//	cons::print("[MSG] Received msg is empty;  Client id = " + std::to_string(get_id()), RED);
-		//}
-		//sock->write_some(buffer(msg)); // echo to client
+		// log receiving
+		cons::print("[MSG] Received msg \"" + msg + "\";  Client id = "
+			+ std::to_string(get_id()), YELLOW);
+
+		// test echo msg
+		archive_and_send(msg);
 	}
 }
 
@@ -74,11 +68,20 @@ bool Client::is_disconnected() {
 	return disconnected;
 }
 
-size_t Client::read_complete(char* buff, const boost::system::error_code& err,
-	size_t bytes) {	// check if reading is done (return 0 if done)
+template <typename T>
+void Client::archive_and_send(T& data) {
+	// archive data
+	streambuf buff;
+	boost::archive::binary_oarchive archive(buff, flags);
+	archive << data;
+	//cons::print("[ARCH] Data archived.  Client id = " + std::to_string(get_id()));
 
-	if (err) return 0;
+	// send size
+	size_t buff_size = buff.size();
+	sock->send(buffer(&buff_size, sizeof(size_t)));
 
-	bool found = std::find(buff, buff + bytes, '\n') < (buff + bytes);
-	return (!found) * BYTES_PER_READ;
+	// send data
+	size_t bytes = sock->send(buff.data());
+	buff.consume(bytes);
+	//cons::print("[MSG] Data send.  Client id = " + std::to_string(get_id()), YELLOW);
 }

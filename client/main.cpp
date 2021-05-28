@@ -20,8 +20,6 @@ int main() {
 	Client client2(CON_IP, CON_PORT, { "third message" });
 	Client client3(CON_IP, CON_PORT, { "" });
 	Client client4(CON_IP, CON_PORT, { "__first message", "__second message", "__third message", "__" });
-
-	cons::print("HELLO", CYAN);
 	
 	client0.join();
 	client1.join();

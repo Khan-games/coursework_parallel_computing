@@ -62,10 +62,38 @@ void Client::run() {
 	connect();
 
 	for (auto msg : v_msg) {
-		archive_and_send(msg);
+		test_echo_run(msg);
+	}
+}
+
+void Client::test_echo_run(std::string msg) {
+	archive_and_send(msg);
+	std::string echo_msg;
+	read_client_data(echo_msg);
+	if (msg == echo_msg) {
+		cons::print("[ECHO] Received echo msg == sended msg.  thread_id = " + thread_id_to_str(), GREEN);
+	}
+	else {
+		cons::print("[ECHO] Received echo msg != sended msg.  thread_id = " + thread_id_to_str(), RED);
 	}
 }
 
 void Client::join() {
 	run_thread.join();
+}
+
+template<typename T>
+void Client::read_data_once(T& data, size_t size) {
+	streambuf buff;
+	sock->receive(buff.prepare(size));
+	buff.commit(size);
+	boost::archive::binary_iarchive iarchive(buff, flags);
+	iarchive >> data;
+}
+
+template<typename T>
+void Client::read_client_data(T& data) {
+	size_t size;
+	read_data_once(size, sizeof(size_t));
+	read_data_once(data, size);
 }

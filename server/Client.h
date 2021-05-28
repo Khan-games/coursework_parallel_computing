@@ -2,6 +2,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 #include "Constants.h"
 #include "t_output.h"
@@ -17,11 +18,6 @@ public:
 
 	// task related
 	void make_task(); // parallel method that recieves and make task from socket
-	size_t read_complete(char* buff, const boost::system::error_code& err, size_t bytes);
-
-	// data receive
-	template<typename T>
-	void read_client_data(T& data); // get data block from client
 
 	// get
 	unsigned get_id();
@@ -41,8 +37,13 @@ private:
 	unsigned id;
 	Server &host_server;
 	
-	// methods
+	// transfer methods
 	template<typename T>
 	void read_data_once(T& data, size_t size); // get data block from client
+	template<typename T>
+	void read_client_data(T& data); // get serialized data from client
+	template<typename T>
+	void archive_and_send(T& data); // send serialized data
+
 };
 

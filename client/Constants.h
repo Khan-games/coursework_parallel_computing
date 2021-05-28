@@ -2,11 +2,10 @@
 
 // network
 #define CON_PORT 10105
-#define DISCONNECT_CYCLE 5 // seconds
-
+#define CON_IP "127.0.0.1"
 
 // constants
-#define BUFF_SIZE 1024 // total length of read msg
+#define BUFF_SIZE 1024
 #define BYTES_PER_READ 128 // one read operation from buffer
 
 // for serialization

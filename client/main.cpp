@@ -13,6 +13,7 @@
 
 // constants
 #define BUFF_SIZE 1024
+#define BYTES_PER_READ 128 // one read operation from buffer
 
 using namespace boost::asio;
 
@@ -32,11 +33,11 @@ std::string thread_id_to_str() { // convert current thread's id to string
 	return s;
 }
 
-bool read_complete(char* buff, const boost::system::error_code & err,
+size_t read_complete(char* buff, const boost::system::error_code& err,
 	size_t bytes) {	// check if reading is done (return 0 if done)
 	if (err) return 0;
 	bool found = std::find(buff, buff + bytes, '\n') < (buff + bytes);
-	return !found;
+	return (!found) * BYTES_PER_READ;
 }
 
 void send_msg(std::string msg) { // send msg to server
@@ -49,7 +50,7 @@ void send_msg(std::string msg) { // send msg to server
 	sock.connect(ep, ec);
 	// check connection error
 	if (ec) {
-		cons::print( "[ERROR] Failed to connect to server!\tthread_id = " + thread_id_to_str(), RED);
+		cons::print( "[ERROR] Failed to connect to server!  thread_id = " + thread_id_to_str(), RED);
 		return;
 	}
 
@@ -62,12 +63,12 @@ void send_msg(std::string msg) { // send msg to server
 	// check response
 	std::string response(buff, bytes);
 	if (msg == response) { // OK
-		cons::print("[RESP] Send msg \"" + msg + "\", received msg \"" + response +"\"\tthread_id = " 
-			+ thread_id_to_str(), GREEN);
+		cons::print("[RESP] Send msg \"" + msg.substr(0, msg.length()-1) + "\", received msg \"" 
+			+ response.substr(0, response.length()-1) +"\";  thread_id = " + thread_id_to_str(), GREEN);
 	}
 	else { // FAIL
-		cons::print("[RESP] Send msg \"" + msg + "\", received msg \"" + response + "\"\tthread_id = " 
-			+ thread_id_to_str(), RED);
+		cons::print("[RESP] Send msg \"" + msg.substr(0, msg.length() - 1) + "\", received msg \""
+			+ response.substr(0, response.length() - 1) + "\";  thread_id = " + thread_id_to_str(), GREEN);
 	}
 
 }
@@ -77,7 +78,7 @@ int main() {
 	cons::print("\t--- CLIENT STARTED ---", GREEN);
 
 	boost::thread_group tg; // thread pool
-	std::vector<std::string> messages {"first message", "second message", "third message"}; // messages to send
+	std::vector<std::string> messages {"first message", "second message", "third message", ""}; // messages to send
 
 	for (auto msg : messages) {
 		tg.create_thread(std::bind(send_msg, msg));

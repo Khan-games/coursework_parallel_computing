@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <boost/asio.hpp>
 
 #include "t_output.h"
@@ -7,7 +8,8 @@
 #define CON_PORT 10105
 
 // constants
-#define BUFF_SIZE 1024
+#define BUFF_SIZE 1024 // total length of read msg
+#define BYTES_PER_READ 128 // one read operation from buffer
 
 using namespace boost::asio;
 
@@ -18,11 +20,12 @@ using namespace boost::asio;
 io_service service; // main obj for boost::asio
 
 
-bool read_complete(char* buff, const boost::system::error_code& err,
+size_t read_complete(char* buff, const boost::system::error_code& err,
 	size_t bytes) {	// check if reading is done (return 0 if done)
+
 	if (err) return 0;
 	bool found = std::find(buff, buff + bytes, '\n') < (buff + bytes);
-	return !found;
+	return (!found) * BYTES_PER_READ;
 }
 
 void handle_connections() {
@@ -40,7 +43,13 @@ void handle_connections() {
 		
 		// echo msg
 		std::string msg(buff, bytes);
-		sock.write_some(buffer(msg));
+		if (msg.length()) {
+			cons::print("[MSG] Received msg \"" + msg.substr(0, msg.length() - 1) + "\"", YELLOW);
+		}
+		else {
+			cons::print("[MSG] Received msg is empty", RED);
+		}
+		sock.write_some(buffer(msg)); // echo to client
 		
 		sock.close();
 	}

@@ -52,6 +52,7 @@ void handle_connections() {
 }
 
 int main() {
+	setlocale(0, ""); // for correct boost error typing
 	cons::enable_console_colors();
 	cons::print("\t--- SERVER STARTED ---", GREEN);
 	

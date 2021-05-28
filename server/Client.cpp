@@ -1,5 +1,7 @@
 #include "Client.h"
 
+using namespace boost::asio;
+
 Client::Client(boost::asio::ip::tcp::socket* sock, unsigned id) :
 	sock(sock),
 	id(id)
@@ -14,7 +16,30 @@ Client::~Client() {
 }
 
 void Client::make_task() { // parallel method that recieves and make task from socket
-	
+	while (true) {
+		int bytes;
+		try {
+			bytes = read(*sock, buffer(buff), std::bind(&Client::read_complete, this, buff, std::placeholders::_1,
+				std::placeholders::_2)); // read msg
+		}
+		catch (boost::system::system_error& err) { // error handling (lead to disconnect)
+			conn_terminated = true;
+			std::string err_text(boost::system::system_error(err).what());
+			cons::print("[ERROR] " + err_text + ";  Client id = " + std::to_string(get_id()), RED);
+			return;
+		}
+
+		// echo msg
+		std::string msg(buff, bytes);
+		if (msg.length() > 1) {
+			cons::print("[MSG] Received msg \"" + msg.substr(0, msg.length() - 1) + "\";  Client id = " 
+				+ std::to_string(get_id()), YELLOW);
+		}
+		else {
+			cons::print("[MSG] Received msg is empty;  Client id = " + std::to_string(get_id()), RED);
+		}
+		sock->write_some(buffer(msg)); // echo to client
+	}
 }
 
 unsigned Client::get_id() {
@@ -23,4 +48,17 @@ unsigned Client::get_id() {
 
 std::string Client::get_ip() {
 	return sock->remote_endpoint().address().to_string();
+}
+
+size_t Client::read_complete(char* buff, const boost::system::error_code& err,
+	size_t bytes) {	// check if reading is done (return 0 if done)
+
+	if (err) {
+		conn_terminated = true;
+		//cons::print(boost::system::system_error(err).what(), RED);
+		//std::cout << err << std::endl;
+		return 0;
+	}
+	bool found = std::find(buff, buff + bytes, '\n') < (buff + bytes);
+	return (!found) * BYTES_PER_READ;
 }

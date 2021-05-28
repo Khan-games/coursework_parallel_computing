@@ -29,7 +29,7 @@ void Server::listen() {
 
 		// log
 		cons::print("[NEW CONN] Connection established with IP "
-			+ temp_client->get_ip() + ", client id = " 
+			+ temp_client->get_ip() + "; Client id = " 
 			+ std::to_string(temp_client->get_id()), GREEN);
 		
 	}

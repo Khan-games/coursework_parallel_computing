@@ -56,21 +56,22 @@ void send_msg(std::string msg) { // send msg to server
 
 	sock.write_some(buffer(msg));
 
-	char buff[BUFF_SIZE];
-	int bytes = read(sock, buffer(buff), std::bind(read_complete, buff, std::placeholders::_1, 
-		std::placeholders::_2));
+	//char buff[BUFF_SIZE];
+	//int bytes = read(sock, buffer(buff), std::bind(read_complete, buff, std::placeholders::_1, 
+	//	std::placeholders::_2));
 
-	// check response
-	std::string response(buff, bytes);
-	if (msg == response) { // OK
-		cons::print("[RESP] Send msg \"" + msg.substr(0, msg.length()-1) + "\", received msg \"" 
-			+ response.substr(0, response.length()-1) +"\";  thread_id = " + thread_id_to_str(), GREEN);
-	}
-	else { // FAIL
-		cons::print("[RESP] Send msg \"" + msg.substr(0, msg.length() - 1) + "\", received msg \""
-			+ response.substr(0, response.length() - 1) + "\";  thread_id = " + thread_id_to_str(), GREEN);
-	}
+	//// check response
+	//std::string response(buff, bytes);
+	//if (msg == response) { // OK
+	//	cons::print("[RESP] Send msg \"" + msg.substr(0, msg.length()-1) + "\", received msg \"" 
+	//		+ response.substr(0, response.length()-1) +"\";  thread_id = " + thread_id_to_str(), GREEN);
+	//}
+	//else { // FAIL
+	//	cons::print("[RESP] Send msg \"" + msg.substr(0, msg.length() - 1) + "\", received msg \""
+	//		+ response.substr(0, response.length() - 1) + "\";  thread_id = " + thread_id_to_str(), GREEN);
+	//}
 
+	
 }
 
 int main() {

@@ -30,7 +30,7 @@ void Client::archive_and_send(T& data) {
 	// send data
 	size_t bytes = sock->send(buff.data());
 	buff.consume(bytes);
-	cons::print("[MSG] Data send.  thread_id = " + thread_id_to_str(), GREEN);
+	cons::print("[MSG] Data send.  thread_id = " + thread_id_to_str(), YELLOW);
 }
 
 std::string Client::thread_id_to_str() { // convert current thread's id to string

@@ -2,7 +2,8 @@
 
 using namespace boost::asio;
 
-Client::Client(boost::asio::ip::tcp::socket* sock, unsigned id) :
+Client::Client(Server& server, boost::asio::ip::tcp::socket* sock, unsigned id) :
+	host_server(server),
 	sock(sock),
 	id(id)
 {
@@ -23,7 +24,8 @@ void Client::make_task() { // parallel method that recieves and make task from s
 				std::placeholders::_2)); // read msg
 		}
 		catch (boost::system::system_error& err) { // error handling (lead to disconnect)
-			conn_terminated = true;
+			disconnected = true; // disconnect client
+			// error log
 			std::string err_text(boost::system::system_error(err).what());
 			cons::print("[ERROR] " + err_text + ";  Client id = " + std::to_string(get_id()), RED);
 			return;
@@ -50,15 +52,15 @@ std::string Client::get_ip() {
 	return sock->remote_endpoint().address().to_string();
 }
 
+bool Client::is_disconnected() {
+	return disconnected;
+}
+
 size_t Client::read_complete(char* buff, const boost::system::error_code& err,
 	size_t bytes) {	// check if reading is done (return 0 if done)
 
-	if (err) {
-		conn_terminated = true;
-		//cons::print(boost::system::system_error(err).what(), RED);
-		//std::cout << err << std::endl;
-		return 0;
-	}
+	if (err) return 0;
+
 	bool found = std::find(buff, buff + bytes, '\n') < (buff + bytes);
 	return (!found) * BYTES_PER_READ;
 }

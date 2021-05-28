@@ -4,11 +4,14 @@
 
 #include "Constants.h"
 #include "t_output.h"
+#include "Server.h"
+
+class Server;
 
 class Client
 {
 public:
-	Client(boost::asio::ip::tcp::socket *sock, unsigned id);
+	Client(Server& server, boost::asio::ip::tcp::socket *sock, unsigned id);
 	~Client();
 
 	// task related
@@ -18,18 +21,20 @@ public:
 	// get
 	unsigned get_id();
 	std::string get_ip();
+	bool is_disconnected();
 
 private:
 	// network vars
 	boost::asio::ip::tcp::socket* sock;
 	char buff[BUFF_SIZE];
-	bool conn_terminated = false; // if true, then disconnect the client
+	bool disconnected = false; // if true, then disconnect the client
 
 	// multithread vars
 	std::thread th_task;
 
 	// other
 	unsigned id;
-	std::string msg;
+	Server &host_server;
+	
 };
 

@@ -4,6 +4,7 @@
 #include <sstream>
 
 #include "t_output.h"
+#include "Index.h"
 
 class IndexCreator
 {

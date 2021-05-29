@@ -11,7 +11,7 @@ int main() {
 	cons::enable_console_colors();
 	cons::print("\t--- INDEX CREATION STARTED ---", GREEN);
 
-	IndexCreator ic("dataset", 7);
+	IndexCreator ic("dataset", 1);
 	ic.join_all();
 
 	cons::print("\t--- INDEX CREATION STOPPED ---", RED);

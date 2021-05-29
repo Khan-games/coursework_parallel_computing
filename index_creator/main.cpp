@@ -1,7 +1,19 @@
 #include <iostream>
 
+#include "t_output.h"
+#include "IndexCreator.h"
+
+
+
 using namespace std;
 
 int main() {
-	cout << "INDEX" << endl;
+	cons::enable_console_colors();
+	cons::print("\t--- INDEX CREATION STARTED ---", GREEN);
+
+	IndexCreator ic("dataset", 7);
+	ic.join_all();
+
+	cons::print("\t--- INDEX CREATION STOPPED ---", RED);
+	std::getchar(); // pause console
 }

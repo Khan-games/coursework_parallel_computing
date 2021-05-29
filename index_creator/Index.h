@@ -5,6 +5,7 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace index {
 
@@ -27,8 +28,10 @@ public:
 	void concat(const Index &ind); // add another index to current index in doc_id order
 
 private:
-	concurrency::concurrent_unordered_map< std::string, std::list<word_pos> > storage;
 
+	//concurrency::concurrent_unordered_map< std::string, std::list<word_pos> > storage;
+	std::map< std::string, std::list<word_pos> > storage;
+	
 	void intersect(std::list<word_pos>& a, std::list<word_pos>& b); /* result of intersection would be written into 'a' list;
 																			!! works only with sorted lists !!*/
 

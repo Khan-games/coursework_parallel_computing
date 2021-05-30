@@ -3,10 +3,12 @@
 #include <boost/asio.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "Constants.h"
-#include "t_output.h"
+#include "../index_creator/t_output.h"
 #include "Server.h"
+#include "../index_creator/Index.h"
 
 class Server;
 
@@ -18,6 +20,7 @@ public:
 
 	// task related
 	void make_task(); // parallel method that recieves and make task from socket
+	void split_request(std::string msg, std::vector<std::string> &req); // split one msg into req vector
 
 	// get
 	unsigned get_id();
@@ -45,5 +48,13 @@ private:
 	template<typename T>
 	void archive_and_send(T& data); // send serialized data
 
+	bool is_word(const char ch); // true if letter or digit
+
 };
 
+inline bool Client::is_word(const char ch) { // true if letter or digit
+	if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')) {
+		return true; // is word
+	}
+	return false;
+}

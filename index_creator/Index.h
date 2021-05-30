@@ -13,7 +13,7 @@
 #include <vector>
 #include <map>
 
-#include "t_output.h"
+#include "../index_creator/t_output.h"
 
 namespace index {
 
@@ -34,8 +34,8 @@ public:
 	void set_files_parameters(int set_start_doc_id, std::vector<std::string>& set_paths);
 
 	// search
-	std::list<word_pos> search(std::string token); // search single word
-	std::list<word_pos> cross_search(std::vector<std::string> tokens); // cross search results
+	std::list<word_pos> search(std::string &token); // search single word
+	std::vector<std::pair<std::string, std::list<word_pos> > > cross_search(std::vector<std::string> &tokens); // cross search results
 
 	// add
 	void add_to_index(const std::string& token, const word_pos& wp);
@@ -71,7 +71,7 @@ private:
 	
 	void intersect(std::list<word_pos>& a, std::list<word_pos>& b); /* result of intersection would be written into 'a' list;
 																			!! works only with sorted lists !!*/
-
+	void intersect(std::vector<std::pair<std::string, std::list<word_pos> > >& a, std::list<word_pos>& b);
 };
 
 // serialization for word_pos

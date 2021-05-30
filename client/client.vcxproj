@@ -145,15 +145,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\index_creator\Index.cpp" />
+    <ClCompile Include="..\index_creator\t_output.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="t_output.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\index_creator\Index.h" />
+    <ClInclude Include="..\index_creator\t_output.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="Constants.h" />
-    <ClInclude Include="t_output.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

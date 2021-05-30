@@ -5,6 +5,10 @@ using namespace boost::asio;
 Server::Server() :
 	acceptor(service, ip::tcp::endpoint(boost::asio::ip::tcp::v4(), CON_PORT))
 {
+	cons::print("[LOAD] Index loading.", YELLOW);
+	server_index.load_from_file("../index_creator/index.index");
+	cons::print("[LOAD] Index loaded.", GREEN);
+
 	disconnect_th = std::thread(&Server::disconnect_clients, this);
 }
 

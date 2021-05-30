@@ -62,7 +62,7 @@ void IndexCreator::indexator(index::Index& ind, int start_file_id, int files_cou
 				else if (was_word) { // word found
 					was_word = false;
 					// create token
-					std::string token = str.substr(start_pos, end_pos - start_pos);
+					token = str.substr(start_pos, end_pos - start_pos);
 					boost::to_lower(token);
 					// add token to index
 					index::word_pos wp = { path_i, row_index, start_pos };
@@ -71,7 +71,7 @@ void IndexCreator::indexator(index::Index& ind, int start_file_id, int files_cou
 			}
 			if (was_word) {
 				// create token
-				std::string token = str.substr(start_pos, str.size() - start_pos);
+				token = str.substr(start_pos, str.size() - start_pos);
 				boost::to_lower(token);
 				// add token to index
 				index::word_pos wp = { path_i, row_index, start_pos };

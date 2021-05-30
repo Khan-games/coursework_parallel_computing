@@ -3,7 +3,7 @@
 #include <boost/asio.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 
-#include "t_output.h"
+#include "../index_creator/t_output.h"
 #include "Constants.h"
 #include "Client.h"
 

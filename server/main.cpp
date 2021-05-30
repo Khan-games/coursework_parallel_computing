@@ -3,7 +3,7 @@
 #include <boost/asio.hpp>
 
 #include "Server.h"
-#include "t_output.h"
+#include "../index_creator/t_output.h"
 #include "Constants.h"
 
 using namespace boost::asio;

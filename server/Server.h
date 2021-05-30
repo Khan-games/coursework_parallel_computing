@@ -7,13 +7,17 @@
 
 #include "Client.h"
 #include "Constants.h"
-#include "t_output.h"
+#include "../index_creator/t_output.h"
+#include "../index_creator/Index.h"
 
 class Client;
 
 class Server
 {
 public:
+
+	index::Index server_index;
+
 	Server();
 	~Server();
 

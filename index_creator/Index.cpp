@@ -144,3 +144,21 @@ std::vector<std::string>* Index::get_paths() {
 	return &paths;
 }
 
+void Index::save_to_file(std::string path) {
+	std::ofstream ofs(path);
+	{
+		boost::archive::text_oarchive oa(ofs);
+		oa << (*this); // save itself
+	}
+	ofs.close();
+}
+
+void Index::load_from_file(std::string path) {
+	std::ifstream ifs(path);
+	{
+		boost::archive::text_iarchive ia(ifs);
+		ia >> (*this); // save itself
+	}
+	ifs.close();
+}
+

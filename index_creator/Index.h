@@ -33,11 +33,17 @@ public:
 	
 	void set_files_parameters(int set_start_doc_id, std::vector<std::string>& set_paths);
 
+	// search
 	std::list<word_pos> search(std::string token); // search single word
 	std::list<word_pos> cross_search(std::vector<std::string> tokens); // cross search results
 
+	// add
 	void add_to_index(const std::string& token, const word_pos& wp);
 	void add_to_index_using_sort(const std::string& token, const word_pos& wp);
+
+	// file maintain
+	void save_to_file(std::string path);
+	void load_from_file(std::string path);
 
 	void concat(Index &ind); // add another index to current index in doc_id order
 
@@ -46,6 +52,7 @@ public:
 	std::map< std::string, std::list<word_pos> >* get_storage();
 	std::vector<std::string>* get_paths();
 
+	bool operator == (const Index& ind) const;
 
 private:
 
@@ -57,8 +64,6 @@ private:
 		ar & paths;
 	}
 
-
-	//concurrency::concurrent_unordered_map< std::string, std::list<word_pos> > storage;
 	std::map< std::string, std::list<word_pos> > storage;
 
 	int start_doc_id;
@@ -81,5 +86,27 @@ inline void serialize(
 	ar & wp.pos_in_row;
 }
 
+// comparison word_pos
+inline bool operator==(const word_pos& s1, const word_pos& s2)
+{
+	if (s1.doc_id == s2.doc_id && s1.row == s2.row && s1.pos_in_row == s2.pos_in_row) {
+		return true;
+	}
+	else {
+		return false;
+	}	
 }
+
+// index compare overload
+inline bool Index::operator== (const Index& ind) const {
+	if (storage == storage && start_doc_id == start_doc_id && paths == paths) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+}
+
 

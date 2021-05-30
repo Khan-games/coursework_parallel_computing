@@ -4,6 +4,8 @@
 #define LOG_FILES_PER_THREAD
 #define LOG_FILES_FINISHED
 
+// #define TEST_SAVE_LOAD
+
 namespace fs = std::filesystem;
 
 IndexCreator::IndexCreator(std::string root_path, int n_threads) :
@@ -123,13 +125,22 @@ void IndexCreator::join_all() {
 
 void IndexCreator::save(std::string path) {
 	cons::print("[SAVE] Saving process has started.", YELLOW);
-	std::ofstream ofs(path);
-	{
-		boost::archive::text_oarchive oa(ofs);
-		oa << result_index;
-	}
-	ofs.close();
+	result_index.save_to_file(path);
 	cons::print("[SAVE] Result index was saved.", GREEN);
+
+	// testing save-load
+	#ifdef TEST_SAVE_LOAD
+	cons::print("[LOAD] Loading process has started.", YELLOW);
+	index::Index loaded_index;
+	loaded_index.load_from_file(path);
+	cons::print("[LOAD] Result index was loaded.", YELLOW);
+	if (result_index == loaded_index) {
+		cons::print("[LOAD] Loaded index matches result index.", GREEN);
+	}
+	else {
+		cons::print("[LOAD] Loaded index doesn't match result index.", RED);
+	}
+	#endif
 }
 
 std::string IndexCreator::thread_id_to_str() { // convert current thread's id to string

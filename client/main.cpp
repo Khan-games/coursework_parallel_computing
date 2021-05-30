@@ -13,17 +13,17 @@ int main() {
 	cons::enable_console_colors();
 	cons::print("\t--- CLIENT STARTED ---", GREEN);
 
-	std::vector<std::string> msg {"first message", "mice", "the", ""}; // messages to send
-
-	Client client0(CON_IP, CON_PORT, { msg[0] });
-	//Client client1(CON_IP, CON_PORT, { "message" });
-	/*Client client2(CON_IP, CON_PORT, { msg[1], "hello" });
-	Client client3(CON_IP, CON_PORT, { msg[3] });*/
+	Client client0(CON_IP, CON_PORT, { "first message", "second_MESSAGE" });
+	Client client1(CON_IP, CON_PORT, { "message", "1 2 3", "message thE, is " });
+	Client client2(CON_IP, CON_PORT, { "first message", "hello", "other" });
+	Client client3(CON_IP, CON_PORT, { "first message", "first message" });
+	Client client4(CON_IP, CON_PORT, { "", "output", "" });
 	
 	client0.join();
-	//client1.join();
-	/*client2.join();
-	client3.join();*/
+	client1.join();
+	client2.join();
+	client3.join();
+	client4.join();
 
 	cons::print("\t--- CLIENT STOPPED ---", RED);
 	std::getchar(); // pause console

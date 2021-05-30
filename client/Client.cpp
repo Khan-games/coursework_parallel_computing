@@ -5,6 +5,7 @@
 #define TEST_WP_CHECK
 
 using namespace boost::asio;
+namespace chr = std::chrono;
 
 Client::Client(std::string ip, int port, std::vector<std::string> v_msg) :
 	ep(boost::asio::ip::address::from_string(ip), port),
@@ -25,7 +26,7 @@ void Client::archive_and_send(T& data) {
 	streambuf buff;
 	boost::archive::binary_oarchive archive(buff, flags);
 	archive << data;
-	cons::print("[ARCH] Data archived.  thread_id = " + thread_id_to_str());
+	//cons::print("[ARCH] Data archived.  thread_id = " + thread_id_to_str());
 
 	// send size
 	size_t buff_size = buff.size();
@@ -66,6 +67,10 @@ void Client::run() {
 	connect();
 
 	for (auto msg : v_msg) {
+
+		// timing on search (start)
+		auto start_time = chr::high_resolution_clock::now();
+
 		archive_and_send(msg); // send request
 
 		// receive size of responce
@@ -112,6 +117,7 @@ void Client::run() {
 			#endif
 		}
 
+		#ifdef TEST_WP_CHECK
 		if (msg_responce_is_correct) {
 			cons::print("[TEST] For msg = \"" + msg + "\" all responses are correct.  thread id = " 
 				+ thread_id_to_str(), GREEN);
@@ -120,6 +126,14 @@ void Client::run() {
 			cons::print("[TEST] For msg = \"" + msg + "\" there are incorrect responces.  thread id = "
 				+ thread_id_to_str(), RED);
 		}
+		#endif
+
+		// timing on search (end)
+		auto end_time = chr::high_resolution_clock::now();
+		cons::print("[TIME] Request = \"" + msg + "\";\n\tSearch took: " 
+			+ std::to_string(chr::duration_cast<chr::milliseconds>(end_time - start_time).count())
+			+ "ms\n\tThread id = " + thread_id_to_str(), CYAN);
+
 	}
 }
 

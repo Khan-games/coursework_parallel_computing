@@ -9,6 +9,8 @@ Server::Server() :
 	server_index.load_from_file("../index_creator/index.index");
 	cons::print("[LOAD] Index loaded.", GREEN);
 
+	server_start_time = std::chrono::high_resolution_clock::now(); // time nullify
+
 	disconnect_th = std::thread(&Server::disconnect_clients, this);
 }
 

@@ -1,6 +1,7 @@
 #include "Client.h"
 
 using namespace boost::asio;
+namespace chr = std::chrono;
 
 Client::Client(Server& server, boost::asio::ip::tcp::socket* sock, unsigned id) :
 	host_server(server),
@@ -90,6 +91,7 @@ void Client::make_task() { // parallel method that recieves and make task from s
 			return;
 		}
 		
+		if (disconnected) return;
 
 		// log receiving
 		cons::print("[MSG] Received msg \"" + msg + "\";  Client id = "
@@ -98,6 +100,12 @@ void Client::make_task() { // parallel method that recieves and make task from s
 		// split request into tokens
 		std::vector<std::string> request;
 		split_request(msg, request);
+
+		// timing on search (start)
+		auto start_time = chr::high_resolution_clock::now();
+		auto time_from_server_start = chr::duration_cast<chr::milliseconds>(start_time - host_server.server_start_time);
+		cons::print("[TIME] Search start time: " + std::to_string(time_from_server_start.count()) + "ms, request = \"" 
+			+ msg + "\";\n\tClient id = " + std::to_string(get_id()), BLUE);
 
 		// search in index
 		search_return_type result;
@@ -108,6 +116,13 @@ void Client::make_task() { // parallel method that recieves and make task from s
 		else if (request.size() > 1) {
 			result = host_server.server_index.cross_search(request); // search
 		}
+
+		// timing on search (end)
+		auto end_time = chr::high_resolution_clock::now();
+		time_from_server_start = chr::duration_cast<chr::milliseconds>(end_time - host_server.server_start_time);
+		cons::print("[TIME] Search end time: " + std::to_string(time_from_server_start.count()) + "ms, request = \""
+			+ msg + "\";\n\tSearch took: " + std::to_string(chr::duration_cast<chr::milliseconds>(end_time-start_time).count())
+			+ "ms\n\tClient id = " + std::to_string(get_id()), CYAN);
 
 		int res_size = result.size(); // size
 
@@ -136,7 +151,8 @@ void Client::make_task() { // parallel method that recieves and make task from s
 			return;
 		}
 		
-
+		cons::print("[MSG] Send responce to \"" + msg + "\";  Client id = "
+			+ std::to_string(get_id()), GREEN);
 	
 	} // infinite loop
 }

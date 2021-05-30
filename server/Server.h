@@ -18,6 +18,9 @@ public:
 
 	index::Index server_index;
 
+	// timing
+	std::chrono::steady_clock::time_point server_start_time = std::chrono::high_resolution_clock::now();
+
 	Server();
 	~Server();
 

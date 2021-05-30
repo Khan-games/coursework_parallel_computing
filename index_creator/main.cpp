@@ -3,8 +3,6 @@
 #include "t_output.h"
 #include "IndexCreator.h"
 
-
-
 using namespace std;
 
 int main() {
@@ -23,6 +21,14 @@ int main() {
 	int time = std::chrono::duration_cast<std::chrono::milliseconds>(ch_end - ch_start).count();
 	cons::print("[TIME] Index creation took " + std::to_string(time) + "ms", CYAN);
 
-	cons::print("\t--- INDEX CREATION STOPPED ---", RED);
+	// saving
+	ic.save("index.index");
+
+	// timing
+	ch_end = std::chrono::high_resolution_clock::now();
+	time = std::chrono::duration_cast<std::chrono::milliseconds>(ch_end - ch_start).count();
+	cons::print("[TIME] Index creation with saving took " + std::to_string(time) + "ms", CYAN);
+
+	cons::print("\t--- INDEX CREATION ENDED ---", RED);
 	std::getchar(); // pause console
 }

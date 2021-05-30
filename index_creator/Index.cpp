@@ -2,6 +2,24 @@
 
 using namespace index;
 
+Index::Index() {
+
+}
+
+Index::Index(std::map< std::string, std::list<word_pos> >& storage,
+	int start_doc_id, std::vector<std::string>& paths) :
+	storage(storage),
+	start_doc_id(start_doc_id),
+	paths(paths)
+{
+
+}
+
+void Index::set_files_parameters(int set_start_doc_id, std::vector<std::string>& set_paths) {
+	start_doc_id = set_start_doc_id;
+	paths = set_paths;
+}
+
 void Index::intersect(std::list<word_pos>& a, std::list<word_pos>& b) { /* result of intersection would be written into 'a' list;
 																    !! works only with sorted lists !!*/
 	std::list<word_pos>::iterator a_iter = a.begin();
@@ -101,15 +119,28 @@ void Index::add_to_index_using_sort(const std::string &token, const word_pos &wp
 		
 }
 
-void Index::concat(const Index& ind) {
+void Index::concat(Index& ind) {
 	// iterate over given index storage
 	auto stor_iter = ind.storage.begin();
 	while (stor_iter != ind.storage.end()) {
 		// iterate over list with positions
 		for (const auto& i : stor_iter->second) {
-			add_to_index_using_sort(stor_iter->first, i);
+			//add_to_index_using_sort(stor_iter->first, i);
+			add_to_index(stor_iter->first, i);
 		}
 		stor_iter++;
 	}
+}
+
+int Index::get_start_doc_id() {
+	return start_doc_id;
+}
+
+std::map< std::string, std::list<word_pos> >* Index::get_storage() {
+	return &storage;
+}
+
+std::vector<std::string>* Index::get_paths() {
+	return &paths;
 }
 

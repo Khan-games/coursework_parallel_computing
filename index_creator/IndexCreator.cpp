@@ -110,6 +110,26 @@ void IndexCreator::join_all() {
 		threads[i].join();
 	}
 	threads.clear();
+
+	// unite all indices
+	cons::print("[UNITE] Blocks merging started.", YELLOW);
+	for (int i = 0; i < th_index.size(); i++) {
+		cons::print("[UNITE] Connecting block number " + std::to_string(i) + ".", CYAN);
+		result_index.concat(th_index[i]);
+	}
+	result_index.set_files_parameters(0, listed_files);
+	cons::print("[UNITE] All blocks are merged into one.", GREEN);
+}
+
+void IndexCreator::save(std::string path) {
+	cons::print("[SAVE] Saving process has started.", YELLOW);
+	std::ofstream ofs(path);
+	{
+		boost::archive::text_oarchive oa(ofs);
+		oa << result_index;
+	}
+	ofs.close();
+	cons::print("[SAVE] Result index was saved.", GREEN);
 }
 
 std::string IndexCreator::thread_id_to_str() { // convert current thread's id to string

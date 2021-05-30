@@ -103,6 +103,7 @@ std::vector<std::pair<std::string, std::list<word_pos> > > Index::cross_search(s
 	typedef std::vector< std::list<word_pos> > search_type;
 
 	// preparation
+	cons::print(std::to_string(tokens.size()), CYAN);
 	if (tokens.size() == 0) return return_type();
 	search_type search_results(tokens.size()); // prevent additional calls
 	return_type temp_result;
@@ -120,7 +121,7 @@ std::vector<std::pair<std::string, std::list<word_pos> > > Index::cross_search(s
 
 	// temp_result now contains all doc_id with first word
 	// adding another words to result
-	for (int i = 0; i < search_results.size(); i++) {
+	for (int i = 1; i < search_results.size(); i++) {
 		temp_result.push_back(pair_type(tokens[i], std::list<word_pos>())); // append temp result
 		for (auto& wp : search_results[i]) {
 			for (auto& tr : temp_result[0].second) {
@@ -128,12 +129,14 @@ std::vector<std::pair<std::string, std::list<word_pos> > > Index::cross_search(s
 					temp_result[i].second.push_back(wp);
 					break;
 				}
-				else if (wp.doc_id > tr.doc_id) {
+				else if (wp.doc_id < tr.doc_id) {
 					break;
 				}
 			}
 		}
 	}
+
+	cons::print(std::to_string(temp_result.size()), CYAN);
 
 	return temp_result;
 }

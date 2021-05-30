@@ -3,6 +3,9 @@
 #include <boost/asio.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include <boost/algorithm/string.hpp>
+#include <fstream>
+#include <filesystem>
 
 #include "../index_creator/t_output.h"
 #include "Constants.h"
@@ -45,6 +48,7 @@ private:
 	void read_client_data(T& data); // get serialized data from client
 
 	// other methods
-	void test_echo_run(std::string msg);
+	void test_echo_run(std::string msg); // provide echo check
+	bool check_wp(const std::string& token, const index::word_pos& wp, const std::string& path); // true if wp is correct 
 };
 

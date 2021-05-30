@@ -1,5 +1,9 @@
 #include "Client.h"
 
+#define LOG_TOKEN_RESPONCE
+
+#define TEST_WP_CHECK
+
 using namespace boost::asio;
 
 Client::Client(std::string ip, int port, std::vector<std::string> v_msg) :
@@ -68,6 +72,8 @@ void Client::run() {
 		int responce_size;
 		read_client_data(responce_size);
 
+		bool msg_responce_is_correct = true;
+
 		// receive data
 		for (int i = 0; i < responce_size; i++) {
 			// read token
@@ -81,6 +87,7 @@ void Client::run() {
 			read_client_data(path_map);
 
 			// generate output
+			#ifdef LOG_TOKEN_RESPONCE
 			std::string out_s;
 			out_s += "[RESP]\tMsg = \"" + msg + "\"\n\tToken = \"" + token 
 				+ "\"\n\tThread id = " + thread_id_to_str()
@@ -93,8 +100,61 @@ void Client::run() {
 					+ path_map[wp.doc_id] + "\"";
 			}
 			cons::print(out_s);
+			#endif
+
+			// check wp
+			#ifdef TEST_WP_CHECK
+			for (auto& wp : wp_list) {
+				if (!check_wp(token, wp, path_map[wp.doc_id])) {
+					msg_responce_is_correct = false;
+				}
+			}
+			#endif
+		}
+
+		if (msg_responce_is_correct) {
+			cons::print("[TEST] For msg = \"" + msg + "\" all responses are correct.  thread id = " 
+				+ thread_id_to_str(), GREEN);
+		}
+		else {
+			cons::print("[TEST] For msg = \"" + msg + "\" there are incorrect responces.  thread id = "
+				+ thread_id_to_str(), RED);
 		}
 	}
+}
+
+bool Client::check_wp(const std::string& token, const index::word_pos& wp, const std::string& temp_path) {
+	std::string path = "../index_creator/" + temp_path;
+
+	// open file
+	std::ifstream fin;
+	if (!std::filesystem::exists(path)) return false;
+	try {
+		fin.open(path);
+		if (!fin.is_open()) return false;
+	}
+	catch (const std::ifstream::failure& e) {
+		cons::print("[ERROR] File \"" + path + "\" failed to open.  thread id = "
+			+ thread_id_to_str(), RED);
+		return false;
+	}
+
+	// get needed row
+	std::string str;
+	for (int i = 0; i <= wp.row ; i++) {
+		std::getline(fin, str);
+	}
+
+	// str now contains correct string
+	bool result = false;
+	str = str.substr(wp.pos_in_row, token.length());
+	boost::to_lower(str); // tokenization
+	if (str == token) {
+		result = true;
+	} 
+
+	fin.close();
+	return result;
 }
 
 void Client::test_echo_run(std::string msg) {

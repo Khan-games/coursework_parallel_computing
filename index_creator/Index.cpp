@@ -103,7 +103,6 @@ std::vector<std::pair<std::string, std::list<word_pos> > > Index::cross_search(s
 	typedef std::vector< std::list<word_pos> > search_type;
 
 	// preparation
-	cons::print(std::to_string(tokens.size()), CYAN);
 	if (tokens.size() == 0) return return_type();
 	search_type search_results(tokens.size()); // prevent additional calls
 	return_type temp_result;
@@ -135,8 +134,6 @@ std::vector<std::pair<std::string, std::list<word_pos> > > Index::cross_search(s
 			}
 		}
 	}
-
-	cons::print(std::to_string(temp_result.size()), CYAN);
 
 	return temp_result;
 }
@@ -213,10 +210,7 @@ void Index::save_to_file(std::string path) {
 
 void Index::load_from_file(std::string path) {
 	std::ifstream ifs(path);
-	{
-		boost::archive::text_iarchive ia(ifs);
-		ia >> (*this); // save itself
-	}
-	ifs.close();
+	boost::archive::text_iarchive ia(ifs);
+	ia >> (*this); // load itself
 }
 

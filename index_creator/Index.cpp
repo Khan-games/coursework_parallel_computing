@@ -51,8 +51,10 @@ std::list<word_pos> Index::search(std::string &token) {
 	return storage[token];
 }
 
-void Index::intersect(std::vector<std::pair<std::string, std::list<word_pos> > >& a, std::list<word_pos>& b) { /* result of intersection would be written into 'a' list;
-																												!! works only with sorted lists !!*/
+void Index::intersect(std::vector<std::pair<std::string, 
+	std::list<word_pos> > >& a, std::list<word_pos>& b) { /* result of intersection would be written into 'a' list;
+														  !! works only with sorted lists !!*/
+
 	int a_index = 0;
 	std::list<word_pos>::iterator a_iter = a[a_index].second.begin();
 	std::list<word_pos>::iterator b_iter = b.begin();

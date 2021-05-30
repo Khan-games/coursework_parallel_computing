@@ -27,6 +27,8 @@ class Index
 {
 public:
 	
+	std::vector<std::string> paths; // listed paths
+
 	Index();
 	Index(std::map< std::string, std::list<word_pos> > &storage, 
 		int start_doc_id, std::vector<std::string> &paths);
@@ -67,7 +69,6 @@ private:
 	std::map< std::string, std::list<word_pos> > storage;
 
 	int start_doc_id;
-	std::vector<std::string> paths;
 	
 	void intersect(std::list<word_pos>& a, std::list<word_pos>& b); /* result of intersection would be written into 'a' list;
 																			!! works only with sorted lists !!*/

@@ -62,7 +62,38 @@ void Client::run() {
 	connect();
 
 	for (auto msg : v_msg) {
-		test_echo_run(msg);
+		archive_and_send(msg); // send request
+
+		// receive size of responce
+		int responce_size;
+		read_client_data(responce_size);
+
+		// receive data
+		for (int i = 0; i < responce_size; i++) {
+			// read token
+			std::string token;
+			read_client_data(token);
+			// read positions for token
+			std::list<index::word_pos> wp_list;
+			read_client_data(wp_list);
+			//read path map
+			std::map<int, std::string> path_map;
+			read_client_data(path_map);
+
+			// generate output
+			std::string out_s;
+			out_s += "[RESP]\tMsg = \"" + msg + "\"\n\tToken = \"" + token 
+				+ "\"\n\tThread id = " + thread_id_to_str()
+				+ "\n\tFor " + std::to_string(i) + "th of " + std::to_string(responce_size) 
+				+ " tokens found " + std::to_string(wp_list.size()) + " results";
+			for (auto& wp : wp_list) {
+				out_s += "\n\t\t{ doc_id: " + std::to_string(wp.doc_id) + "; row: " 
+					+ std::to_string(wp.row) + "; pos_in_row: " 
+					+ std::to_string(wp.pos_in_row) + " }\t\""
+					+ path_map[wp.doc_id] + "\"";
+			}
+			cons::print(out_s);
+		}
 	}
 }
 

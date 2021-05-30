@@ -35,7 +35,7 @@ void Client::read_client_data(T& data) {
 	catch (boost::system::system_error& err) { // error handling (lead to disconnect)
 		disconnected = true; // disconnect client
 		// error log
-		cons::print("[ERROR] Remote host closed connection.  Client id = " + std::to_string(get_id()), RED);
+		//cons::print("[ERROR] Remote host closed connection.  Client id = " + std::to_string(get_id()), RED);
 		//std::string err_text(boost::system::system_error(err).what());
 		//cons::print("[ERROR] " + err_text + ";  Client id = " + std::to_string(get_id()), RED);
 		return;
@@ -76,9 +76,20 @@ void Client::make_task() { // parallel method that recieves and make task from s
 	while (true) {
 		// typedefs
 		typedef std::vector<std::pair<std::string, std::list<index::word_pos> > > search_return_type;
+		typedef std::pair<std::string, std::list<index::word_pos> > search_pair_type;
 
 		std::string msg; // request on search
-		read_client_data(msg);
+		try {
+			read_client_data(msg);
+		}
+		catch (boost::system::system_error& err) {
+			disconnected = true; // disconnect client
+			// error log
+			cons::print("[ERROR] Remote host closed connection.  Client id = " 
+				+ std::to_string(get_id()), RED);
+			return;
+		}
+		
 
 		// log receiving
 		cons::print("[MSG] Received msg \"" + msg + "\";  Client id = "
@@ -89,15 +100,42 @@ void Client::make_task() { // parallel method that recieves and make task from s
 		split_request(msg, request);
 
 		// search in index
-		search_return_type result = host_server.server_index.cross_search(request);
+		search_return_type result;
+		if (request.size() == 1) {
+			auto single_result = host_server.server_index.search(request[0]); // search
+			result.push_back(search_pair_type(request[0], single_result));
+		}
+		else if (request.size() > 1) {
+			result = host_server.server_index.cross_search(request); // search
+		}
+
+		int res_size = result.size(); // size
+
+		// generate map with result pathes
+		std::map<int, std::string> path_map;
+		for (int i = 0; i < res_size; i++) {
+			for (auto& wp : result[i].second) {
+				path_map[wp.doc_id] = host_server.server_index.paths[wp.doc_id];
+			}
+		}
 
 		// send results
-		int res_size = result.size();
-		archive_and_send(res_size); // send size
-		for (int i = 0; i < result.size(); i++) { // send data
-			archive_and_send(result[i].first);
-			archive_and_send(result[i].second);
+		try {
+			archive_and_send(res_size); // send size
+			for (int i = 0; i < result.size(); i++) { // send data
+				archive_and_send(result[i].first);
+				archive_and_send(result[i].second);
+				archive_and_send(path_map);
+			}
 		}
+		catch (boost::system::system_error& err) {
+			disconnected = true; // disconnect client
+			// error log
+			cons::print("[ERROR] Remote host closed connection.  Client id = "
+				+ std::to_string(get_id()), RED);
+			return;
+		}
+		
 
 	
 	} // infinite loop

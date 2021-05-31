@@ -11,6 +11,7 @@ namespace fs = std::filesystem;
 IndexCreator::IndexCreator(std::string root_path, int n_threads) :
 	root_path(root_path)
 {
+	cons::print("[LOG] Index creator started with " + std::to_string(n_threads) + " threads.");
 	list_all_files(root_path); 
 	int files_per_th = trunc(listed_files.size() / n_threads);
 	th_index.resize(n_threads);

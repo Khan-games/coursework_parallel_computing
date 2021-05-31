@@ -13,7 +13,7 @@ int main() {
 	auto ch_start = std::chrono::high_resolution_clock::now();
 
 	// run index creation
-	IndexCreator ic("dataset", 6); // pass data folder and number of threadss
+	IndexCreator ic("dataset"); // pass data folder and number of threadss
 	ic.join_all();
 
 	// timing

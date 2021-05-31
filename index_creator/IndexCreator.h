@@ -15,7 +15,7 @@ class IndexCreator
 public:
 	index::Index result_index;
 
-	IndexCreator(std::string root_path, int n_threads = 8);
+	IndexCreator(std::string root_path, int n_threads = std::thread::hardware_concurrency());
 
 	// indexing
 	void indexator(index::Index& ind, int start_file_id, int files_count); // run in separate thread;  processes given paths into single index block

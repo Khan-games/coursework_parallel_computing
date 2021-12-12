@@ -4,6 +4,9 @@
 #include <mutex>
 #include <string>
 #include <windows.h>
+#include <deque>
+
+#include <boost/multiprecision/cpp_int.hpp>
 
 // for color enabling
 #ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
@@ -24,6 +27,10 @@ namespace cons {
 	extern std::mutex output_m;
 	void print(std::string str, std::string color = RESET);
 	void enable_console_colors();
+
+	// convertions
+	std::string toString(boost::multiprecision::cpp_int number);
+	boost::multiprecision::cpp_int fromString(std::string str);
 }
 
 

@@ -1,5 +1,7 @@
 #include "Client.h"
 
+using namespace CryptoPP;
+using namespace boost::multiprecision;
 using namespace boost::asio;
 namespace chr = std::chrono;
 
@@ -73,7 +75,67 @@ void Client::split_request(std::string msg, std::vector<std::string>& req) {
 	}
 }
 
+void Client::swapKeys() {
+	std::string responce = "0";
+	while (responce == "0") {
+		rsaCustom.generateKeyPair();
+
+		// send plain RSA pub
+		std::string publicExpStr = rsa::RSACustom::toString(rsaCustom.getPublicKey().exp);
+		std::string publicModulusStr = rsa::RSACustom::toString(rsaCustom.getPublicKey().modulus);
+		archive_and_send(publicExpStr);
+		archive_and_send(publicModulusStr);
+
+		// receive encrypted RSA key + hash
+		std::string remoteKeyExpStr;
+		std::string remoteKeyModulusStr1;
+		std::string remoteKeyModulusStr2;
+		std::string remoteKeyHashStr;
+		read_client_data(remoteKeyExpStr);
+		read_client_data(remoteKeyModulusStr1);
+		read_client_data(remoteKeyModulusStr2);
+		read_client_data(remoteKeyHashStr);
+		// decrypt
+		cpp_int remoteKeyExp = rsa::RSACustom::toCppInt(rsaCustom.decrypt(rsa::RSACustom::toCppInt(remoteKeyExpStr)));
+		cpp_int remoteKeyModulus = rsa::RSACustom::toCppInt(rsaCustom.decrypt(rsa::RSACustom::toCppInt(remoteKeyModulusStr1)) 
+			+ rsaCustom.decrypt(rsa::RSACustom::toCppInt(remoteKeyModulusStr2)));
+		rsa::Key remoteKey = { remoteKeyExp , remoteKeyModulus };
+		// check hash
+		if (!SHA256Custom::isEqual(SHA256Custom(rsa::RSACustom::toString(remoteKeyExp + remoteKeyModulus)).getHash(), remoteKeyHashStr)) {
+			//cons::print("[ERROR] Remote public key hashes in not equal!", RED);
+			archive_and_send(responce);
+			continue;
+		}
+		rsaCustom.setRemotePublicKey(remoteKey);
+		responce = "1";
+		archive_and_send(responce);
+		responce = "0";
+
+		// send signed and encrypted AES key
+		// prepare vars
+		SecByteBlock aesKey = aesCustom.getKey();
+		SecByteBlock aesIV = aesCustom.getIV();
+		std::string aesKeyStr = aes::AESCustom::keyToString(aesKey);
+		std::string aesIVStr = aes::AESCustom::keyToString(aesIV);
+		// calc hash
+		std::string aesKeyHash = SHA256Custom(aesKeyStr).getHash();
+		std::string aesIVHash = SHA256Custom(aesIVStr).getHash();
+		// sign and encrypt
+		std::string aesKeySignedEncrypted = rsa::RSACustom::toString(rsaCustom.encrypt(rsaCustom.encryptSign(aesKeyStr)));
+		std::string aesIVSignedEncrypted = rsa::RSACustom::toString(rsaCustom.encrypt(rsaCustom.encryptSign(aesIVStr)));
+		// send
+		archive_and_send(aesKeySignedEncrypted);
+		archive_and_send(aesKeyHash);
+		archive_and_send(aesIVSignedEncrypted);
+		archive_and_send(aesIVHash);
+
+		read_client_data(responce);
+	}
+}
+
 void Client::make_task() { // parallel method that recieves and make task from socket
+	swapKeys(); // swap RSA and AES keys
+
 	while (true) {
 		// typedefs
 		typedef std::vector<std::pair<std::string, std::list<index::word_pos> > > search_return_type;
@@ -185,4 +247,47 @@ void Client::archive_and_send(T& data) {
 	size_t bytes = sock->send(buff.data());
 	buff.consume(bytes);
 	//cons::print("[MSG] Data send.  Client id = " + std::to_string(get_id()), YELLOW);
+}
+
+template<typename T>
+void Client::read_data_once_AES(T& data, size_t size)
+{
+	streambuf buff;
+	sock->receive(buff.prepare(size));
+	buff.commit(size);
+	boost::archive::binary_iarchive iarchive(buff, flags);
+	std::string strData = reinterpret_cast
+	iarchive >> data;
+}
+
+template<typename T>
+void Client::read_with_AES(T& data)
+{
+	try {
+		size_t size;
+		read_data_once(size, sizeof(size_t));
+		read_data_once(data, size);
+	}
+	catch (boost::system::system_error& err) { // error handling (lead to disconnect)
+		disconnected = true; // disconnect client
+		return;
+	}
+}
+
+template<typename T>
+void Client::send_with_AES(T& data)
+{
+	// archive data
+	streambuf buff;
+	boost::archive::binary_oarchive archive(buff, flags);
+	archive << data;
+	//cons::print("[ARCH] Data archived.  Client id = " + std::to_string(get_id()));
+
+	// send size
+	size_t buff_size = buff.size();
+	sock->send(buffer(&buff_size, sizeof(size_t)));
+
+	// send data
+	size_t bytes = sock->send(buff.data());
+	buff.consume(bytes);
 }

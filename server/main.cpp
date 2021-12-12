@@ -16,6 +16,8 @@ int main() {
 	cons::enable_console_colors();
 	cons::print("\t--- SERVER STARTED ---", GREEN);
 	
+	srand(time(NULL));
+
 	Server server;
 	server.listen();
 	

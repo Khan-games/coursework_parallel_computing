@@ -2,7 +2,7 @@
 
 #define LOG_TOKEN_RESPONCE
 
-#define TEST_WP_CHECK
+//#define TEST_WP_CHECK
 
 using namespace boost::asio;
 namespace chr = std::chrono;
@@ -59,13 +59,87 @@ void Client::connect() {
 	}
 	cons::print("[NEW CONN] Connection established with server " + sock->remote_endpoint().address().to_string()
 		+ ":" + std::to_string(sock->remote_endpoint().port()) + ";  thread_id = " + thread_id_to_str(), GREEN);
+	
+	swapKeys();
+}
+
+void Client::swapKeys()
+{
+	std::string responce = "0";
+	while (responce == "0") {
+		rsaCustom.generateKeyPair();
+
+		// receive plain RSA pub
+		std::string remoteExpStr;
+		std::string remoteModulusStr;
+		read_client_data(remoteExpStr);
+		read_client_data(remoteModulusStr);
+		rsa::Key remotePublicKey = { rsa::RSACustom::toCppInt(remoteExpStr), rsa::RSACustom::toCppInt(remoteModulusStr) };
+		rsaCustom.setRemotePublicKey(remotePublicKey);
+
+		// send encrypted RSA key + hash
+		// encrypt exp
+		boost::multiprecision::cpp_int pubKeyExp =
+			rsaCustom.encrypt(rsa::RSACustom::toString(rsaCustom.getPublicKey().exp)); // encrypt key exp
+		// split modulus into two strings
+		std::string modulusStr = rsa::RSACustom::toString(rsaCustom.getPublicKey().modulus);
+		size_t strDelimiter = modulusStr.size() / 2;
+		std::string modulusFirst = std::string(modulusStr, 0, strDelimiter);
+		std::string modulusSecond = std::string(modulusStr, strDelimiter, modulusStr.size() - strDelimiter);
+		boost::multiprecision::cpp_int pubKeyModulus1 = rsaCustom.encrypt(modulusFirst); // encrypt key modulus first
+		boost::multiprecision::cpp_int pubKeyModulus2 = rsaCustom.encrypt(modulusSecond); // encrypt key modulus second
+		// strings to send
+		std::string pubKeyExpStr = rsa::RSACustom::toString(pubKeyExp);
+		std::string pubKeyModulusStr1 = rsa::RSACustom::toString(pubKeyModulus1);
+		std::string pubKeyModulusStr2 = rsa::RSACustom::toString(pubKeyModulus2);
+		std::string hashStr = SHA256Custom(rsa::RSACustom::toString(rsaCustom.getPublicKey().exp 
+			+ rsaCustom.getPublicKey().modulus)).getHash();
+		// send
+		archive_and_send(pubKeyExpStr); // send key exp
+		archive_and_send(pubKeyModulusStr1); // send key modulus 1
+		archive_and_send(pubKeyModulusStr2); // send key modulus 2
+		archive_and_send(hashStr); // send key hash
+		// get responce
+		read_client_data(responce);
+		if (responce == "0") {
+			continue;
+		}
+		responce = "1";
+
+		// receive AES encrypted and signed + hash
+		// prepare vars
+		std::string aesKeySignedEncrypted, aesKeyHash;
+		std::string aesIVSignedEncrypted, aesIVHash;
+		// receive data
+		read_client_data(aesKeySignedEncrypted);
+		read_client_data(aesKeyHash);
+		read_client_data(aesIVSignedEncrypted);
+		read_client_data(aesIVHash);
+		// unsign
+		std::string aesKey = rsaCustom.decryptAndUnsign(rsa::RSACustom::toCppInt(aesKeySignedEncrypted));
+		std::string aesIV = rsaCustom.decryptAndUnsign(rsa::RSACustom::toCppInt(aesIVSignedEncrypted));
+		// check hash
+		if (!SHA256Custom::isEqual(aesKeyHash, SHA256Custom(aesKey).getHash()) ||
+			!SHA256Custom::isEqual(aesIVHash, SHA256Custom(aesIV).getHash())) {
+			//cons::print("[ERROR] Hash of AES key is not equal to decrypted AES key!", RED);
+			archive_and_send(responce);
+			continue;
+		}
+		// set received key
+		aesCustom.setKey(aes::AESCustom::stringToKey(aesKey));
+		aesCustom.setIV(aes::AESCustom::stringToKey(aesIV));
+		responce = "1";
+		archive_and_send(responce);
+	}
+	
+	
 }
 
 void Client::run() {
 	cons::print("[NEW CLIENT] Client created on thread = " + thread_id_to_str(), GREEN);
 
 	connect();
-
+	
 	for (auto msg : v_msg) {
 
 		// timing on search (start)

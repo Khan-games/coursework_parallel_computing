@@ -11,6 +11,12 @@
 #include "Constants.h"
 #include "../index_creator/Index.h"
 
+#include "../network_encryption/RSACustom.h"
+#include "../network_encryption/AESCustom.h"
+#include "../network_encryption/SHA256.h"
+
+
+
 class Client
 {
 public:
@@ -29,6 +35,10 @@ private:
 	boost::asio::ip::tcp::socket* sock;
 	boost::asio::ip::tcp::endpoint ep; // connecting to localhost, port 10105
 
+	// encryption
+	rsa::RSACustom rsaCustom;
+	aes::AESCustom aesCustom;
+
 	// threads
 	std::thread run_thread;
 
@@ -37,6 +47,7 @@ private:
 
 	// main methods
 	void connect(); // connecting to server
+	void swapKeys(); // RSA and AES keys swap with sign
 	void run();	// run client in separate  thread
 
 	// transfer data

@@ -10,6 +10,10 @@
 #include "Server.h"
 #include "../index_creator/Index.h"
 
+#include "../network_encryption/RSACustom.h"
+#include "../network_encryption/AESCustom.h"
+#include "../network_encryption/SHA256.h"
+
 class Server;
 
 class Client
@@ -19,6 +23,7 @@ public:
 	~Client();
 
 	// task related
+	void swapKeys();
 	void make_task(); // parallel method that recieves and make task from socket
 	void split_request(std::string msg, std::vector<std::string> &req); // split one msg into req vector
 
@@ -32,6 +37,10 @@ private:
 	boost::asio::ip::tcp::socket* sock;
 	char buff[BUFF_SIZE];
 	bool disconnected = false; // if true, then disconnect the client
+
+	// encryption
+	rsa::RSACustom rsaCustom;
+	aes::AESCustom aesCustom;
 
 	// multithread vars
 	std::thread th_task;
@@ -47,6 +56,13 @@ private:
 	void read_client_data(T& data); // get serialized data from client
 	template<typename T>
 	void archive_and_send(T& data); // send serialized data
+	// with AES
+	template<typename T>
+	void read_data_once_AES(T& data, size_t size); // get data block from client
+	template<typename T>
+	void read_with_AES(T& data); // get serialized data from client
+	template<typename T>
+	void send_with_AES(T& data); // send serialized data
 
 	bool is_word(const char ch); // true if letter or digit
 

@@ -23,14 +23,20 @@ Client::~Client() {
 template <typename T>
 void Client::archive_and_send(T& data) {
 	// archive data
-	streambuf buff;
-	boost::archive::binary_oarchive archive(buff, flags);
+	streambuf rawBuff;
+	boost::archive::binary_oarchive archive(rawBuff, flags);
 	archive << data;
-	//cons::print("[ARCH] Data archived.  thread_id = " + thread_id_to_str());
+	//cons::print("[ARCH] Data archived.  Client id = " + std::to_string(get_id()));
+
+	// encrypt data
+	std::string rawData = buffToString(rawBuff);
+	std::string encryptedData = aesCustom.encrypt(rawData);
+	streambuf buff; // buffer with encrypted data
+	stringToBuffer(buff, encryptedData);
 
 	// send size
-	size_t buff_size = buff.size();
-	sock->send(buffer(&buff_size, sizeof(size_t)));
+	size_t buffSize = buff.size();
+	sock->send(buffer(&buffSize, sizeof(size_t)));
 
 	// send data
 	size_t bytes = sock->send(buff.data());
@@ -262,10 +268,33 @@ void Client::join() {
 }
 
 template<typename T>
-void Client::read_data_once(T& data, size_t size) {
-	streambuf buff;
-	sock->receive(buff.prepare(size));
-	buff.commit(size);
+void Client::read_data_once(T& data, size_t size, bool encryption) {
+	// receive data
+	streambuf encryptedBuff;
+	sock->receive(encryptedBuff.prepare(size));
+	encryptedBuff.commit(size);
+
+	streambuf buff; // buffer with decrypted data
+
+	// decrypt if encryption == true
+	if (encryption) {
+		std::string encryptedData = buffToString(encryptedBuff);
+		for (auto x : encryptedData) std::cout << (unsigned)x << ' ';
+		std::cout << std::endl;
+		//cons::print(encryptedData, RED);
+		std::string decryptedData = aesCustom.decrypt(encryptedData);
+		for (auto x : decryptedData) std::cout << (unsigned)x << ' ';
+		std::cout << std::endl;
+		stringToBuffer(buff, encryptedData);
+	}
+	else {
+		// forward copy encrypted buff to buff
+		std::size_t bytes_copied = buffer_copy(
+			buff.prepare(encryptedBuff.size()), encryptedBuff.data());
+		buff.commit(bytes_copied);
+	}
+
+	// deserialize
 	boost::archive::binary_iarchive iarchive(buff, flags);
 	iarchive >> data;
 }
@@ -273,6 +302,6 @@ void Client::read_data_once(T& data, size_t size) {
 template<typename T>
 void Client::read_client_data(T& data) {
 	size_t size;
-	read_data_once(size, sizeof(size_t));
+	read_data_once(size, sizeof(size_t), false);
 	read_data_once(data, size);
 }

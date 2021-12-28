@@ -32,6 +32,10 @@ public:
 	std::string get_ip();
 	bool is_disconnected();
 
+	// buffer converting
+	static std::string buffToString(boost::asio::streambuf& sb); // get data from buffer to std::string 
+	static void stringToBuffer(boost::asio::streambuf& sb, std::string const& data); // write data from std::string to buffer
+
 private:
 	// network vars
 	boost::asio::ip::tcp::socket* sock;
@@ -51,22 +55,29 @@ private:
 	
 	// transfer methods
 	template<typename T>
-	void read_data_once(T& data, size_t size); // get data block from client
+	void read_data_once(T& data, size_t size, bool encryption = true); // get data block from client
 	template<typename T>
 	void read_client_data(T& data); // get serialized data from client
 	template<typename T>
 	void archive_and_send(T& data); // send serialized data
-	// with AES
-	template<typename T>
-	void read_data_once_AES(T& data, size_t size); // get data block from client
-	template<typename T>
-	void read_with_AES(T& data); // get serialized data from client
-	template<typename T>
-	void send_with_AES(T& data); // send serialized data
-
+	
 	bool is_word(const char ch); // true if letter or digit
 
 };
+
+inline std::string Client::buffToString(boost::asio::streambuf& sb)
+{
+	std::istream is(std::addressof(sb));
+	std::string line;
+	std::getline(is, line);
+	return line;
+}
+
+inline void Client::stringToBuffer(boost::asio::streambuf& sb, std::string const& data)
+{
+	std::ostream strm(std::addressof(sb));
+	strm << data;
+}
 
 inline bool Client::is_word(const char ch) { // true if letter or digit
 	if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')) {

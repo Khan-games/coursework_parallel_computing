@@ -20,10 +20,28 @@ Client::~Client() {
 }
 
 template<typename T>
-void Client::read_data_once(T& data, size_t size) {
-	streambuf buff;
-	sock->receive(buff.prepare(size));
-	buff.commit(size);
+void Client::read_data_once(T& data, size_t size, bool encryption) {
+	// receive data
+	streambuf encryptedBuff;
+	sock->receive(encryptedBuff.prepare(size));
+	encryptedBuff.commit(size);
+	
+	streambuf buff; // buffer with decrypted data
+
+	// decrypt if encryption == true
+	if (encryption) {
+		std::string encryptedData = buffToString(encryptedBuff);
+		std::string decryptedData = aesCustom.decrypt(encryptedData);
+		stringToBuffer(buff, encryptedData);
+	}
+	else {
+		// forward copy encrypted buff to buff
+		std::size_t bytes_copied = buffer_copy(
+			buff.prepare(encryptedBuff.size()), encryptedBuff.data());                
+		buff.commit(bytes_copied);
+	}
+
+	// deserialize
 	boost::archive::binary_iarchive iarchive(buff, flags);
 	iarchive >> data;
 }
@@ -32,7 +50,7 @@ template<typename T>
 void Client::read_client_data(T& data) {
 	try {
 		size_t size;
-		read_data_once(size, sizeof(size_t));
+		read_data_once(size, sizeof(size_t), false);
 		read_data_once(data, size);
 	}
 	catch (boost::system::system_error& err) { // error handling (lead to disconnect)
@@ -234,14 +252,23 @@ bool Client::is_disconnected() {
 template <typename T>
 void Client::archive_and_send(T& data) {
 	// archive data
-	streambuf buff;
-	boost::archive::binary_oarchive archive(buff, flags);
+	streambuf rawBuff;
+	boost::archive::binary_oarchive archive(rawBuff, flags);
 	archive << data;
 	//cons::print("[ARCH] Data archived.  Client id = " + std::to_string(get_id()));
 
+	// encrypt data
+	std::string rawData = buffToString(rawBuff);
+	std::string encryptedData = aesCustom.encrypt(rawData);
+	streambuf buff; // buffer with encrypted data
+	stringToBuffer(buff, encryptedData);
+	//cons::print(encryptedData, RED);
+	for (auto x : encryptedData) std::cout << (unsigned)x << ' ';
+	std::cout << std::endl;
+
 	// send size
-	size_t buff_size = buff.size();
-	sock->send(buffer(&buff_size, sizeof(size_t)));
+	size_t buffSize = buff.size();
+	sock->send(buffer(&buffSize, sizeof(size_t)));
 
 	// send data
 	size_t bytes = sock->send(buff.data());
@@ -249,45 +276,3 @@ void Client::archive_and_send(T& data) {
 	//cons::print("[MSG] Data send.  Client id = " + std::to_string(get_id()), YELLOW);
 }
 
-template<typename T>
-void Client::read_data_once_AES(T& data, size_t size)
-{
-	streambuf buff;
-	sock->receive(buff.prepare(size));
-	buff.commit(size);
-	boost::archive::binary_iarchive iarchive(buff, flags);
-	std::string strData = reinterpret_cast
-	iarchive >> data;
-}
-
-template<typename T>
-void Client::read_with_AES(T& data)
-{
-	try {
-		size_t size;
-		read_data_once(size, sizeof(size_t));
-		read_data_once(data, size);
-	}
-	catch (boost::system::system_error& err) { // error handling (lead to disconnect)
-		disconnected = true; // disconnect client
-		return;
-	}
-}
-
-template<typename T>
-void Client::send_with_AES(T& data)
-{
-	// archive data
-	streambuf buff;
-	boost::archive::binary_oarchive archive(buff, flags);
-	archive << data;
-	//cons::print("[ARCH] Data archived.  Client id = " + std::to_string(get_id()));
-
-	// send size
-	size_t buff_size = buff.size();
-	sock->send(buffer(&buff_size, sizeof(size_t)));
-
-	// send data
-	size_t bytes = sock->send(buff.data());
-	buff.consume(bytes);
-}
